@@ -1,0 +1,43 @@
+# two object map for learning object labels
+# uses the map_maker module -> found in src/
+
+info:
+  name: 2obj
+  bounds:
+    max_x: 5.0
+    max_y: 2.5
+    min_x: -5.0    
+    min_y: -2.5
+  origin:
+    x_coord: 0.0
+    y_coord: 0.0
+
+bookcase:
+  name: bookcase
+  color: sandybrown
+  centroid_x: -4.0
+  centroid_y: 2.0
+  x_len: 0.38
+  y_len: 0.18
+  orientation: 0 # faces toward the right 
+  shape: rectangle
+
+checkers table:
+  name: checkers table
+  color: sandybrown
+  centroid_x: 3.5
+  centroid_y: -1.5
+  x_len: 0.52
+  y_len: 0.75
+  orientation: 0
+  shape: rectangle
+
+desk:
+  name: desk
+  color: sandybrown
+  centroid_x: 0
+  centroid_y: 0
+  x_len: 0.5
+  y_len: 0.3
+  orientation: 0
+  shape: rectangle
