@@ -53,7 +53,7 @@ class DataGenerator(object):
         # print(self.models)
         for i in range(0,len(x)):
             probs = []
-            c = len(self.models*5) # five softmax classes per model
+            c = len(self.models)*5 # five softmax classes per model
             for mod in self.models:
                 for j in range(0,5):
                     probs.append(mod[0].pointEvalND(j,[x[i],y[i]]))
@@ -162,7 +162,7 @@ class DataGenerator(object):
 
             p_c_o = p_o_c + np.log(p_c) - np.log(p_o)
             probs.append(p_c_o)
-        # print(probs)
+        print(np.exp(probs))
         return (max(probs),probs.index(max(probs)))
 
     def compute_likelihoods(self,samples):
@@ -184,7 +184,7 @@ class DataGenerator(object):
                 
             # self.likelihoods[key] /= len(samples)
 
-        # print(self.likelihoods) 
+        print(self.likelihoods) 
 
     def visual(self):
         '''
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     l = dg.sample_points()
     dg.compute_likelihoods(l)
     obs = ["The robot is left of the checkers table.",
-            "The robot is in front of the bookcase.",
+           "The robot is in front of the bookcase.",
             "The robot is in front of the desk."]
     obs_classes = []
     for o in obs:
@@ -263,6 +263,6 @@ if __name__ == "__main__":
         obs_classes.append([m_name,class_idx])
     prob, prob_idx = dg.bayes(obs_classes)
     print(dg.combinations[prob_idx])
-    dg.visual()
+    dg.visual(dg.combinations[prob_idx])
     print(prob,prob_idx)
     # print(l)
