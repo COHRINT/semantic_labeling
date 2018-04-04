@@ -26,7 +26,7 @@ from map_maker import Map
 from softmaxModels import *
 
 
-class DataGenerator(object):
+class Labeler(object):
 
     def __init__(self,map_yaml):
 
@@ -151,18 +151,24 @@ class DataGenerator(object):
         '''
         probs = []
         p_c = 1/(len(self.combinations))
-        p_o = sum([x*p_c for x in self.likelihoods])
+        # p_o = sum([x*p_c for x in self.likelihoods])
+        p_o_c = []
         for i in range(0,len(self.combinations)):
             p_c_o = 0
-            p_o_c = 0
+            p = 0
             for o in obs:
                 obj = o[0]
                 c_idx = o[1]
-                p_o_c += np.log(self.likelihoods[self.combinations[i].index(obj)][c_idx])
+                p += np.log(self.likelihoods[self.combinations[i].index(obj)][c_idx])
+            p_o_c.append(p)
 
-            p_c_o = p_o_c + np.log(p_c) - np.log(p_o)
+        p_o = sum([p*p_c for p in p_o_c])
+        print(p_o)
+
+        for i in range(0,len(self.combinations)):
+            p_c_o = p_o_c[i] + np.log(p_c) - p_o
             probs.append(p_c_o)
-        print(np.exp(probs))
+        # print(np.exp(probs))
         return (max(probs),probs.index(max(probs)))
 
     def compute_likelihoods(self,samples):
@@ -184,9 +190,9 @@ class DataGenerator(object):
                 
             # self.likelihoods[key] /= len(samples)
 
-        print(self.likelihoods) 
+        # print(self.likelihoods) 
 
-    def visual(self):
+    def visual(self,labels):
         '''
         display objects and their correct labels
         '''
@@ -218,8 +224,13 @@ class DataGenerator(object):
                 # tmp = patches.Rectangle((cent[0]- x/2,cent[1]-y/2),width = x, height=y,angle=theta,fc=col,ec='black');
             #tmp = patches.Rectangle(self.findLLCorner(m.objects[obj]),width = x, height=y,angle=theta,fc=col,ec='black');
             ax.add_patch(tmp)
-            ax.text(cent[0]+0.5,cent[1],obj)
+            # add true label of object
+            ax.text(cent[0]+0.5,cent[1],'true: '+obj,color='blue')
+            # add number of object
             ax.text(cent[0],cent[1],cnt)
+            # add computed label of object
+            ax.text(cent[0]+0.5,cent[1]-0.2,'guess: '+labels[cnt],color='red')
+            
             cnt += 1
 
         # figsize = fig.get_size_inches()
@@ -247,22 +258,50 @@ class DataGenerator(object):
         return (obj.centroid[0]-s2, obj.centroid[1]-s1)  
 
 
+def gen_obs(objects):
+    classes = ['inside','in front of','right of','left of','behind']
+    obs_list = []
+    for obj in objects:
+        for c in classes:
+            obs_list.append('The robot is {} the {}.'.format(c,obj))
+    return obs_list
+    
+
+
 
 if __name__ == "__main__":
     map_fn = '2obj_map.yaml'
-    dg = DataGenerator(map_fn)
-    dg.make_models()
-    l = dg.sample_points()
-    dg.compute_likelihoods(l)
-    obs = ["The robot is left of the checkers table.",
-           "The robot is in front of the bookcase.",
-            "The robot is in front of the desk."]
+    lb = Labeler(map_fn)
+    lb.make_models()
+    l = lb.sample_points()
+    lb.compute_likelihoods(l)
+    # obs = ["The robot is left of the checkers table.",
+    #        "The robot is in front of the bookcase.",
+    #         "The robot is left of the desk."]
     obs_classes = []
-    for o in obs:
-        _,m_name,class_idx,_ = dg.obs2models(o)
-        obs_classes.append([m_name,class_idx])
-    prob, prob_idx = dg.bayes(obs_classes)
-    print(dg.combinations[prob_idx])
-    dg.visual(dg.combinations[prob_idx])
-    print(prob,prob_idx)
+    # for o in obs:
+    #     _,m_name,class_idx,_ = lb.obs2models(o)
+    #     obs_classes.append([m_name,class_idx])
+    # prob, prob_idx = lb.bayes(obs_classes)
+    # print(lb.combinations[prob_idx])
+    # lb.visual(lb.combinations[prob_idx])
+    # print(prob,prob_idx)
     # print(l)
+    obs_list = gen_obs(lb.map.objects)
+    usr_input = ''
+    while usr_input is not 'q':
+        cnt = 0
+        for obs in obs_list:
+            print('[{}]\t{}'.format(cnt,obs))
+            cnt += 1
+
+        usr_input = input('Enter observation number.\t Enter [q] to quit.\n')
+        print('\033[H\033[J')
+        if usr_input is 'q': break
+
+        _,m_name,class_idx,_ = lb.obs2models(obs_list[int(usr_input)])
+        obs_classes.append([m_name,class_idx])
+        prob, prob_idx = lb.bayes(obs_classes)
+        # print(lb.combinations[prob_idx])
+        lb.visual(lb.combinations[prob_idx])
+
